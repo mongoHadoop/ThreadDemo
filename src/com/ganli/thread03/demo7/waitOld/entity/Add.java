@@ -1,0 +1,19 @@
+package com.ganli.thread03.demo7.waitOld.entity;
+//加法
+public class Add {
+
+	private String lock;
+
+	public Add(String lock) {
+		super();
+		this.lock = lock;
+	}
+
+	public void add() {
+		synchronized (lock) {
+			ValueObject.list.add("anyString");
+			lock.notifyAll();
+		}
+	}
+
+}

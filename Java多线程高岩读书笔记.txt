@@ -1,0 +1,215 @@
+1 多线程
+ 例子 com.ganli.thread01.demo2.t1
+ 多线程执行时,代码的执行顺序或调用顺序是无关的
+ 线程的使用 extend Thread or implements Runnable 接口 均可以
+ 
+2 线程名称
+ Thread.currentThread().getName() 
+  * 在控制台 输出的 main 其实就是一个名称叫mian的线程在执行mian()方法中的代码
+  * 控制台输出的main 和main方法没有任何关系,仅仅是名字刚好相同
+3 线程启动就绪状态
+ * 	thread.start();代表
+ * 代表线程准备就绪,等待调用线程的run方法，
+ * 其实整个过程就是让系统安排一个时间来调用Thread的run方法
+  线程是随机被执行
+  
+4 关键字 synchronized
+	 *  添加上 synchronized 后，使多个线程在执行run方法时,以排队的方式进行处理。
+	 *  当一个线程在调用run 前,先判断run 方法有没上锁,如果上锁了,说明有其他线程在执行run,
+	 *  这样就实现了排队调用run的目的，是实现了排队递减cout的效果。
+	 * 
+	 *  synchronized 可以在任意对象及方法加上锁，而加锁的这段代码称为 互斥区 或者 临界区
+	 * 
+	 *  非线程安全是指 多个线程对同一个对象中的同一个实例变量进行操作时会出现值被更改,
+	 *  值不同步的情况,进而影响出现的执行流程
+	 *
+	 */例子 com.ganli.thread01.demo6.t4.mythread;
+	 
+5 isAlive 判断当前线程是否处于活动状态,线程处于正在运行或者就绪状态(准备运行)就认为线程是存活的状态
+ 例子 com.ganli.thread01.demo9.t7.run
+ 
+ com.ganli.thread01.demo10.isaliveOtherTest
+		在构造方法运行时
+	Thread.currentThread().getName()=main
+	Thread.currentThread().isAlive()=true
+	this.getName()=Thread-0
+	this.isAlive()=false
+	
+	
+6 sleep  是指 让 当前 正在执行的线程休眠(暂停执行) 
+	Thread.sleep(2000);
+	
+ 
+7  Thread.currentThread().getId() 取到线程的唯一标识 
+
+8  Thread.interrupt() 线程停止
+  停止一个线程意味着在线程处理处理完成任务之前停掉正在做的操作,也就是放弃当前的操作，
+  虽然看起来很简单但必须做好防范措施，以达到预期效果
+	Thread.stop() 可以使用，但是最好不用它，因为这个方法是不安全的，在未来的java版本中可能不支持了
+	大多数用的是 Thread.interrupt()
+	这个方法不会终止一个正在运行的线程,还需要加入一个判断才可以完成线程的停止,
+	Java 有3种方法可以终止正在运行的线程
+	1)使用退出标准,也即当run方法执行完成后,线程自动终止
+	2)stop 强制终止线程,但不推荐此方法,因为stop和suspend及resume一样都是作废过期的方法，使用他们会发生不可预料的结果.
+	3)使用interrupt方法中断线程
+	 例子 com.ganli.thread01.demo12.t11.test
+    使用interrupt方法中断线程，并不像for 语句中的break那样，马上停止循环，调用interrupt方法仅仅在当前线程中打了一个停止的标记
+	并不是真的停止线程.
+	如何停止
+	java的SDK中Thread有2个方法：this.interrupted(); 测试当前线程是否已经中断 一般是main线程
+	例子 com.ganli.thread01.demo12.t12.exthread.MyThread;run1.java
+	
+	
+	this.isinterruputed()测试线程是否已经中断
+	例子 com.ganli.thread01.demo12.t12.exthread.MyThread;
+	com.ganli.thread01.demo13.t13.exthread;
+	this.interrupted()只能调用一次返回true 连续2次调用会返回false，也即会清除第一次状态
+	 测试当前线程是否已经中断，执行后会将状态有重新清除为false
+	this.isInterrupted()测试线程是否已经中断但不清除状态
+	/**
+	 * 此实例 展示了 虽然当前线程 知道了被调用停止了，但是break不会停止线程执行
+	 * 只是跳出了for 还会继续执行下面的代码 所以最好 抛出异常 如例子t13_1
+		 * @author lg
+		 *
+	 */
+ 
+	 public class MyThread extends Thread {
+		@Override
+		public void run() {
+			super.run();
+			try {
+				for (int i = 0; i < 500000; i++) {
+					if (this.interrupted()) {
+						System.out.println("已经是停止状态了!我要退出了!");
+						throw new InterruptedException();// 抛出异常停止执行
+					}
+					System.out.println("i=" + (i + 1));
+				}
+				System.out.println("我在for下面");
+			} catch (InterruptedException e) {
+				System.out.println("进MyThread.java类run方法中的catch了！");
+				e.printStackTrace();
+			}
+		}
+	
+	例子 com.ganli.thread01.demo14.t14.exthread;
+		@Override
+	public void run() {
+		super.run();
+		try {
+			System.out.println("run begin");
+			Thread.sleep(200000);
+			System.out.println("run end");
+		} catch (InterruptedException e) {
+			System.out.println(" 在沉睡中被停止!进入catch!"+this.isInterrupted());
+			//在沉睡中被停止线程，会进入catch 并且清除停止状态值 this.isInterrupted()=false
+			e.printStackTrace();
+		}
+	}
+	
+	以上所述 总结起来 即 当 线程被调用了 Thread.interrupt()停止后 当遇到线程正在 Thread.sleep()者也会抛异常停止
+	
+	也即停止线程的方法是 Thread.interrupt()调用后,this.isInterrupted()可以用来判断线程是否停止 来终结异常。
+	this.isInterrupted() 和return 可以一起使用，实现停止线程的效果；例com.ganli.thread01.demo17.usereturnInterrupt.test.run
+	
+	不过还是建议 使用 ‘抛异常’ 的方法来实现线程的停止，因为catch块中 还可以将异常向上抛,使线程停止的事件得以传播
+	if (this.interrupted()) {
+						System.out.println("已经是停止状态了!我要退出了!");
+						throw new InterruptedException();// 抛出异常停止执行
+					}
+	
+	
+	
+	
+9 stop暴力停止线程不会抛出异常，正常停止，方法stop已经被作废，因为如果强制让线程停止则有可能使一些清理性的工作得不到完成。
+  另外就是对锁定的对象进行了‘解锁’,导致数据得不到同步处理，出现数据不一致的问题。
+  例子  com.ganli.thread01.demo16.stopThrowLock.test.run;
+  
+10 暂停线程 （ 因为其容易引起 死锁，所有一般不使用）
+	暂停线程意味着此线程还可以恢复运行。在java的多线程中,可以使用suspend方法暂停线程，使用resume方法恢复线程 的执行
+	例 com.ganli.thread01.demo18.suspend_resume_test.run;
+	
+	suspend 与 resume的方法缺点在于对公共的同步对象(即synchronized修饰的对象)的独占,使得其他线程无法访问公共同步对象
+	也即在 synchronized 修饰的方法里 suspend 后 锁无法放开
+	比如  例子 com.ganli.thread01.demo19.suspend_resume_deal_lock.test.run
+	synchronized public void printString() {
+		System.out.println("begin");
+		if (Thread.currentThread().getName().equals("a")) {
+			System.out.println("a线程永远 suspend了！");
+			Thread.currentThread().suspend();
+		}
+		System.out.println("end");
+	}
+	同理 例子 com.ganli.thread01.demo20.suspend_resume_LockStop.mythread;
+	
+	public class MyThread extends Thread {
+	private long i = 0;
+
+	@Override
+	public void run() {
+		while (true) {
+			i++;
+			System.out.println(i);//此输出是同步方法 ，如果现场一旦在执行此方法 突然 调用了suspend 则会出现 死锁
+		}
+	}
+   }
+   虽然 suspend（） 方法 是 过期作废 的 方法， 但还 是有 必要 研究 它 过期作废 的 原因， 这是 很有 意义 的。
+   因为其容易引起 死锁，所有一般不使用。
+   
+11 yield方法
+  yield（）方法的作用是放弃当前 的 CPU 资源，将它让给其他的任务去占用 CPU 执行时间。 
+  但放弃的时间不确定,有可能刚刚放弃， 马上又获得 CPU 时间片。
+  例子 com.ganli.thread01.demo22.t17.test
+  
+12 线程的优先级
+ 在操作系统中,线程可以划分优先级,优先级较高的线程得到的CPU资源较多,也就是CPU优先执行优先级较高的线程对象中的任务。
+ 设置线程优先级有助于 帮“ 线程 规划 器” 确定在下一次选择哪一个线程来优先执行.
+ 设置线程的优先级使用 setPriority（）
+ 线程的优先级分为1-10个等级数字越大则等级越高。
+ JDK中使用3个常量来预置定义优先级的值,代码如下： 
+ public final static int MIN_ PRIORITY = 1; 
+ public final static int NORM_ PRIORITY = 5; 
+ public final static int MAX_ PRIORITY = 10;
+ 
+ 1)线程的优先级继承   
+   在Java中,线程的优先级具有继承性,比如A线程启动B线程,则B线程的优先级与A是一样的。
+	高优先级的线程总是大部分先执行完，但不代表高优先级的线程全部先执行完。
+
+13 守护线程   
+	在Java线程中有两种线程，一种是用户线程， 另一种是守护线程。
+	守护线程是一种特殊的线程， 它的特性有“ 陪伴” 的含义
+	当进程中不存在非守护线程了，则守护线程自动销毁。
+	典型的守护线程就是 “垃圾回收线程”， 
+	当进程中没有非守护线程了，则  “垃圾回收线程”也就没有存在的必要了，自动销毁。
+	用个比较通俗的比喻来解释一下“ 守护 线程”：任何一个守护线程都是整个JVM中所有非守护线程的“ 保姆”，
+	只要当前JVM实例中存在任何一个非守护线程没有结束，守护线程就在工作，
+	只有当最后一个非守护线程结束时，守护线程才随着JVM一同结束工作。
+	1)Daemon的作用是为其他线程的运行提供便利服务， 
+	通过setDaemon(true)来设置线程为“守护线程”；
+	将一个用户线程设置为守护线程的方式是在线程对象创建之前用线程对象的setDaemon方法。
+	例如com.ganli.thread01.demo26.daemonThread.test.run
+	守护线程最典型的应用就是GC（ 垃圾 回收 器），它就是一个很称职的守护者。
+	
+		try {
+			MyThread thread1 = new MyThread();
+			/**
+			 * 也即把当前这个 thread1 设置为守护线程,
+			 * 当java虚拟机中没有非守护线程在运行的时候，java虚拟机会关闭
+			 * 也即 main 主线程(用户线程) 运行完毕后,这 thread1 自动执行完毕
+			 */
+			
+			thread1.setDaemon(true);
+			thread1.start();
+			Thread.sleep(50000);
+			//当java虚拟机中没有非守护线程在运行的时候，java虚拟机会关闭
+			System.out.println("我离开thread对象也不再打印了，也就是停止了！");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+	
+
+
+	
+	
